@@ -179,6 +179,7 @@ public class SpeechToTextPlugin :
                 "stop" -> stopListening(result)
                 "cancel" -> cancelListening(result)
                 "locales" -> locales(result)
+                "isSpeechAvailable" -> isSpeechAvailable(result)
                 else -> result.notImplemented()
             }
         } catch (exc: Exception) {
@@ -186,6 +187,14 @@ public class SpeechToTextPlugin :
             result.error(SpeechToTextErrors.unknown.name,
                     "Unexpected exception", exc.localizedMessage)
         }
+    }
+
+    private  fun isSpeechAvailable(result: Result) {
+        if (sdkVersionTooLow()) {
+            result.success(false)
+            return
+        }
+        result.success(SpeechRecognizer.isRecognitionAvailable(pluginContext));
     }
 
     private fun hasPermission(result: Result) {

@@ -233,6 +233,14 @@ public class SpeechToTextPlugin :
         }
     }
 
+    private  fun isSpeechAvailable(result: Result) {
+        if (sdkVersionTooLow()) {
+            result.success(false)
+            return
+        }
+        result.success(SpeechRecognizer.isRecognitionAvailable(pluginContext));
+    }
+
     private fun hasPermission(result: Result) {
         if (sdkVersionTooLow()) {
             result.success(false)

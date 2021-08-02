@@ -39,6 +39,11 @@ class MethodChannelSpeechToText extends SpeechToTextPlatform {
   }
 
   @override
+  Future<bool> isSpeechAvailable() async {
+    return await _channel.invokeMethod<bool>('isSpeechAvailable') ?? false;
+  }
+
+  @override
   Future<bool> initialize(
       {debugLogging = false, List<SpeechConfigOption>? options}) async {
     _channel.setMethodCallHandler(_handleCallbacks);

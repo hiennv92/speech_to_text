@@ -81,6 +81,10 @@ class SpeechToTextProvider extends ChangeNotifier {
     return available;
   }
 
+  Future<bool> isSpeechAvailable() {
+    return _speechToText.isSpeechAvailable();
+  }
+
   /// Returns true if the provider has been initialized and can be used to recognize speech.
   bool get isAvailable => _speechToText.isAvailable;
 

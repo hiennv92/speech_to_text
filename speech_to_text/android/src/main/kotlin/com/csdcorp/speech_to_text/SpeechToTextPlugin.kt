@@ -236,9 +236,11 @@ public class SpeechToTextPlugin :
     private  fun isSpeechAvailable(result: Result) {
         if (sdkVersionTooLow()) {
             result.success(false)
+            Log.v(logTag, "sdk version too low")
             return
         }
-        result.success(SpeechRecognizer.isRecognitionAvailable(pluginContext));
+        Log.v(logTag, "get SpeechRecognizer.isRecognitionAvailable")
+        result.success(SpeechRecognizer.isRecognitionAvailable(pluginContext))
     }
 
     private fun hasPermission(result: Result) {

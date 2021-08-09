@@ -161,7 +161,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
     private func isSpeechAvailable( _ result: @escaping FlutterResult) {
         let available = recognizer?.isAvailable ?? false
         DispatchQueue.main.async {
-            result( has )
+            result( available )
         }
     }
     

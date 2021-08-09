@@ -239,7 +239,7 @@ public class SpeechToTextPlugin :
             Log.v(logTag, "sdk version too low")
             return
         }
-        Log.v(logTag, "get SpeechRecognizer.isRecognitionAvailable")
+        Log.v(logTag, "get SpeechRecognizer.isRecognitionAvailable ${SpeechRecognizer.isRecognitionAvailable(pluginContext)}")
         result.success(SpeechRecognizer.isRecognitionAvailable(pluginContext))
     }
 

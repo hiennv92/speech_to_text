@@ -159,7 +159,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
     }
 
     private func isSpeechAvailable( _ result: @escaping FlutterResult) {
-        let available = recognizer?.isAvailable ?? false
+        let available = SFSpeechRecognizer.authorizationStatus() == SFSpeechRecognizerAuthorizationStatus.authorized
         DispatchQueue.main.async {
             result( available )
         }

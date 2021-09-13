@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutter_test/flutter_test.dart';
+
 import 'speech_to_text_platform_interface.dart';
 
 const MethodChannel _channel =

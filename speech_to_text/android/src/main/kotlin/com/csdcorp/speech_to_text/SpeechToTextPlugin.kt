@@ -223,7 +223,8 @@ public class SpeechToTextPlugin :
                 "stop" -> stopListening(result)
                 "cancel" -> cancelListening(result)
                 "locales" -> locales(result)
-                "isSpeechAvailable" -> isSpeechAvailable(result)
+                "has_record_permission" -> hasRecordPermission(result)
+                "has_speech_permission" -> hasSpeechPermission(result)
                 else -> result.notImplemented()
             }
         } catch (exc: Exception) {
@@ -233,14 +234,29 @@ public class SpeechToTextPlugin :
         }
     }
 
-    private  fun isSpeechAvailable(result: Result) {
+    private fun hasRecordPermission(result: Result) {
+        if (sdkVersionTooLow()) {
+            result.success(false)
+            return
+        }
+        debugLog("Start has_record_permission")
+        val localContext = pluginContext
+        if (localContext != null) {
+            val hasPerm = ContextCompat.checkSelfPermission(localContext,
+                    Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+            result.success(hasPerm)
+        }
+    }
+
+    private fun hasSpeechPermission(result: Result) {
         if (sdkVersionTooLow()) {
             result.success(false)
             Log.v(logTag, "sdk version too low")
             return
         }
-        Log.v(logTag, "get SpeechRecognizer.isRecognitionAvailable ${SpeechRecognizer.isRecognitionAvailable(pluginContext)}")
-        result.success(SpeechRecognizer.isRecognitionAvailable(pluginContext))
+        val permission = SpeechRecognizer.isRecognitionAvailable(pluginContext) && SpeechRecognizer.isOnDeviceRecognitionAvailable(pluginContext)
+        Log.v(logTag, "get SpeechRecognizer.isRecognitionAvailable ${permission}")
+        result.success(permission)
     }
 
     private fun hasPermission(result: Result) {

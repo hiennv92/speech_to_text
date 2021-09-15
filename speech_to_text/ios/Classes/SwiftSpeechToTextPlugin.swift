@@ -11,7 +11,8 @@ public enum SwiftSpeechToTextMethods: String {
     case stop
     case cancel
     case locales
-    case isSpeechAvailable
+    case has_record_permission
+    case has_speech_permission
     case unknown // just for testing
 }
 
@@ -140,8 +141,10 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             cancelSpeech( result )
         case SwiftSpeechToTextMethods.locales.rawValue:
             locales( result )
-        case SwiftSpeechToTextMethods.isSpeechAvailable.rawValue:
-            isSpeechAvailable( result )
+        case SwiftSpeechToTextMethods.has_record_permission.rawValue:
+            hasRecordPermission( result )
+        case SwiftSpeechToTextMethods.has_speech_permission.rawValue:
+            hasSpeechPermission( result )
         default:
             os_log("Unrecognized method: %{PUBLIC}@", log: pluginLog, type: .error, call.method)
             DispatchQueue.main.async {
@@ -158,10 +161,17 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         }
     }
 
-    private func isSpeechAvailable( _ result: @escaping FlutterResult) {
-        let available = SFSpeechRecognizer.authorizationStatus() == SFSpeechRecognizerAuthorizationStatus.authorized
+    private func hasRecordPermission(_ result: @escaping FlutterResult) {
+        let has = AVAudioSession.sharedInstance().recordPermission == AVAudioSession.RecordPermission.granted
         DispatchQueue.main.async {
-            result( available )
+            result( has )
+        }
+    }
+
+    private func hasSpeechPermission(_ result: @escaping FlutterResult) {
+        let has = SFSpeechRecognizer.authorizationStatus() == SFSpeechRecognizerAuthorizationStatus.authorized
+        DispatchQueue.main.async {
+            result( has )
         }
     }
     

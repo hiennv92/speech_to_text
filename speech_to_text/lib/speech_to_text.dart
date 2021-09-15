@@ -290,12 +290,20 @@ class SpeechToText {
     return _initWorked;
   }
 
-  Future<bool> isSpeechAvailable() async {
+  Future<bool> hasRecordPermission() async {
     if (!_initWorked) {
       return Future.value(false);
     }
     _shutdownListener();
-    return await SpeechToTextPlatform.instance.isSpeechAvailable();
+    return await SpeechToTextPlatform.instance.hasRecordPermission();
+  }
+
+  Future<bool> hasSpeechPermission() async {
+    if (!_initWorked) {
+      return Future.value(false);
+    }
+    _shutdownListener();
+    return await SpeechToTextPlatform.instance.hasSpeechPermission();
   }
 
   /// Stops the current listen for speech if active, does nothing if not.

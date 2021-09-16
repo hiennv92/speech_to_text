@@ -291,18 +291,10 @@ class SpeechToText {
   }
 
   Future<bool> hasRecordPermission() async {
-    if (!_initWorked) {
-      return Future.value(false);
-    }
-    _shutdownListener();
     return await SpeechToTextPlatform.instance.hasRecordPermission();
   }
 
   Future<bool> hasSpeechPermission() async {
-    if (!_initWorked) {
-      return Future.value(false);
-    }
-    _shutdownListener();
     return await SpeechToTextPlatform.instance.hasSpeechPermission();
   }
 

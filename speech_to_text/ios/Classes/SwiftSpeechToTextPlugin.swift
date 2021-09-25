@@ -161,7 +161,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             }
             recordSound(result, sampleRate: sampleRate)
         case SwiftSpeechToTextMethods.stop_record.rawValue:
-            stopCurrentRecord()
+            stopCurrentRecord(result: result)
         default:
             os_log("Unrecognized method: %{PUBLIC}@", log: pluginLog, type: .error, call.method)
             DispatchQueue.main.async {
@@ -381,7 +381,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         listening = false
     }
 
-    private func stopCurrentRecord( ) {
+    private func stopCurrentRecord( result: FlutterResult ) {
         stopAllPlayers()
 
         do {
@@ -414,6 +414,8 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         catch {
             os_log("Error deactivation: %{PUBLIC}@", log: pluginLog, type: .info, error.localizedDescription)
         }
+
+        sendBoolResult( true, result );
     }
     
     private func listenForSpeech( _ result: @escaping FlutterResult, localeStr: String?, partialResults: Bool, onDevice: Bool, listenMode: ListenMode, sampleRate: Int ) {

@@ -160,7 +160,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
                     return
             }
             recordSound(result, sampleRate: sampleRate)
-        case SwiftSpeechToTextCallbackMethods.stop_record.rawValue:
+        case SwiftSpeechToTextMethods.stop_record.rawValue:
             stopCurrentRecord()
         default:
             os_log("Unrecognized method: %{PUBLIC}@", log: pluginLog, type: .error, call.method)

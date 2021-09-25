@@ -149,6 +149,11 @@ class MethodChannelSpeechToText extends SpeechToTextPlatform {
         false;
   }
 
+  @override
+  Future<void> stopRecord() async {
+    await _channel.invokeMethod('stop_record');
+  }
+
   /// returns the list of speech locales available on the device.
   ///
   @override

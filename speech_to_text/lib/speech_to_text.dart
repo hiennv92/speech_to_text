@@ -470,6 +470,10 @@ class SpeechToText {
     }
   }
 
+  Future<void> stopRecord() async {
+    await SpeechToTextPlatform.instance.stopRecord();
+  }
+
   void _setupListenAndPause(
       Duration? initialPauseFor, Duration? initialListenFor) {
     _pauseFor = null;

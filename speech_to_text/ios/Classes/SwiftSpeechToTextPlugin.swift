@@ -14,6 +14,7 @@ public enum SwiftSpeechToTextMethods: String {
     case has_record_permission
     case has_speech_permission
     case record_sound
+    case stop_record
     case unknown // just for testing
 }
 
@@ -159,6 +160,8 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
                     return
             }
             recordSound(result, sampleRate: sampleRate)
+        case SwiftSpeechToTextCallbackMethods.stop_record.rawValue:
+            stopCurrentRecord()
         default:
             os_log("Unrecognized method: %{PUBLIC}@", log: pluginLog, type: .error, call.method)
             DispatchQueue.main.async {
@@ -377,6 +380,41 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         onPlayEnd = nil
         listening = false
     }
+
+    private func stopCurrentRecord( ) {
+        stopAllPlayers()
+
+        do {
+            try trap {
+                self.audioEngine.stop()
+            }
+        }
+        catch {
+            os_log("Error stopping engine: %{PUBLIC}@", log: pluginLog, type: .error, error.localizedDescription)
+        }
+        do {
+            try trap {
+                self.inputNode?.removeTap(onBus: self.busForNodeTap);
+            }
+        }
+        catch {
+            os_log("Error removing trap: %{PUBLIC}@", log: pluginLog, type: .error, error.localizedDescription)
+        }
+        do {
+            if let rememberedAudioCategory = rememberedAudioCategory {
+                try self.audioSession.setCategory(rememberedAudioCategory)
+            }
+        }
+        catch {
+            os_log("Error stopping listen: %{PUBLIC}@", log: pluginLog, type: .error, error.localizedDescription)
+        }
+        do {
+            try self.audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+        }
+        catch {
+            os_log("Error deactivation: %{PUBLIC}@", log: pluginLog, type: .info, error.localizedDescription)
+        }
+    }
     
     private func listenForSpeech( _ result: @escaping FlutterResult, localeStr: String?, partialResults: Bool, onDevice: Bool, listenMode: ListenMode, sampleRate: Int ) {
         if ( nil != currentTask || listening ) {
@@ -548,7 +586,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         catch {
             failedListen = true
             os_log("Error starting listen: %{PUBLIC}@", log: pluginLog, type: .error, error.localizedDescription)
-            stopCurrentListen()
+            stopCurrentRecord()
             sendBoolResult( false, result );
             let speechError = SpeechRecognitionError(errorMsg: "error_listen_failed", permanent: true )
             do {

@@ -10,8 +10,6 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart';
 
-import 'speech_to_text_web.dart';
-
 enum ListenMode {
   deviceDefault,
   dictation,

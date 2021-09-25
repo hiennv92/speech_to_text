@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -144,7 +145,8 @@ class MethodChannelSpeechToText extends SpeechToTextPlatform {
       "sampleRate": sampleRate,
     };
 
-    return await _channel.invokeMethod<bool>('listen', listenParams) ?? false;
+    return await _channel.invokeMethod<bool>('record_sound', listenParams) ??
+        false;
   }
 
   /// returns the list of speech locales available on the device.
@@ -175,6 +177,11 @@ class MethodChannelSpeechToText extends SpeechToTextPlatform {
       case soundLevelChangeMethod:
         if (call.arguments is double && null != onSoundLevel) {
           onSoundLevel!(call.arguments);
+        }
+        break;
+      case recordDataMethod:
+        if (call.arguments is Uint8List && null != onRecordData) {
+          onRecordData!(call.arguments);
         }
         break;
       default:

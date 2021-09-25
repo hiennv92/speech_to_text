@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart';
+
+import 'speech_to_text_web.dart';
 
 enum ListenMode {
   deviceDefault,
@@ -73,6 +76,8 @@ typedef SpeechStatusListener = void Function(String status);
 /// the [listen] method for use.
 typedef SpeechSoundLevelChange = Function(double level);
 
+typedef SpeechRecordData = Function(Uint8List data);
+
 /// An interface to device specific speech recognition services.
 ///
 /// The general flow of a speech recognition session is as follows:
@@ -92,6 +97,7 @@ class SpeechToText {
   static const String notifyErrorMethod = 'notifyError';
   static const String notifyStatusMethod = 'notifyStatus';
   static const String soundLevelChangeMethod = 'soundLevelChange';
+  static const String recordDataMethod = 'recordData';
   static const String listeningStatus = 'listening';
   static const String notListeningStatus = 'notListening';
   static const String doneStatus = 'done';
@@ -180,6 +186,7 @@ class SpeechToText {
   SpeechErrorListener? errorListener;
   SpeechStatusListener? statusListener;
   SpeechSoundLevelChange? _soundLevelChange;
+  SpeechRecordData? _recordData;
 
   factory SpeechToText() => _instance;
 
@@ -441,6 +448,27 @@ class SpeechToText {
       }
     } on PlatformException catch (e) {
       throw ListenFailedException(e.message, e.details, e.stacktrace);
+    }
+  }
+
+  Future recordSound({
+    SpeechRecordData? onRecordData,
+    int sampleRate = 0,
+  }) async {
+    if (!_initWorked) {
+      throw SpeechToTextNotInitializedException();
+    }
+
+    _recordData = onRecordData;
+    _userEnded = false;
+    _lastSpeechResult = null;
+    _recognized = false;
+    try {
+      var started = await SpeechToTextPlatform.instance
+          .recordSound(sampleRate: sampleRate);
+      print('call recordSound success');
+    } on PlatformException catch (e) {
+      throw ListenFailedException(e.details);
     }
   }
 

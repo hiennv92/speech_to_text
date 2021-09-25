@@ -17,6 +17,7 @@ class MethodChannelSpeechToText extends SpeechToTextPlatform {
   static const String notifyErrorMethod = 'notifyError';
   static const String notifyStatusMethod = 'notifyStatus';
   static const String soundLevelChangeMethod = "soundLevelChange";
+  static const String recordDataMethod = 'recordData';
 
   /// Returns true if the user has already granted permission to access the
   /// microphone, does not prompt the user.
@@ -134,6 +135,15 @@ class MethodChannelSpeechToText extends SpeechToTextPlatform {
     if (null != localeId) {
       listenParams["localeId"] = localeId;
     }
+    return await _channel.invokeMethod<bool>('listen', listenParams) ?? false;
+  }
+
+  @override
+  Future<bool> recordSound({int sampleRate = 0}) async {
+    Map<String, dynamic> listenParams = {
+      "sampleRate": sampleRate,
+    };
+
     return await _channel.invokeMethod<bool>('listen', listenParams) ?? false;
   }
 

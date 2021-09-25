@@ -165,6 +165,10 @@ abstract class SpeechToTextPlatform extends PlatformInterface {
     throw UnimplementedError('listen() has not been implemented.');
   }
 
+  Future<void> stopRecord() {
+    throw UnimplementedError('listen() has not been implemented.');
+  }
+
   /// returns the list of speech locales available on the device.
   ///
   Future<List<dynamic>> locales() {

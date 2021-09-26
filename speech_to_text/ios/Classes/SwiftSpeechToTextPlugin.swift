@@ -381,7 +381,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         listening = false
     }
 
-    private func stopCurrentRecord( result: FlutterResult ) {
+    private func stopCurrentRecord( result: FlutterResult? = nil ) {
         stopAllPlayers()
 
         do {
@@ -415,7 +415,9 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             os_log("Error deactivation: %{PUBLIC}@", log: pluginLog, type: .info, error.localizedDescription)
         }
 
-        sendBoolResult( true, result );
+        if let result = result {
+            sendBoolResult( true, result );
+        }
     }
     
     private func listenForSpeech( _ result: @escaping FlutterResult, localeStr: String?, partialResults: Bool, onDevice: Bool, listenMode: ListenMode, sampleRate: Int ) {
@@ -567,7 +569,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             let theSampleRate = audioSession.sampleRate
             let fmt = AVAudioFormat(commonFormat: recordingFormat!.commonFormat, sampleRate: theSampleRate, channels: recordingFormat!.channelCount, interleaved: recordingFormat!.isInterleaved)
             print("speech input sample \(theSampleRate) \(recordingFormat!.sampleRate)")
-            try trap {
+//            try trap {
                 self.inputNode?.installTap(onBus: self.busForNodeTap, bufferSize: self.speechBufferSize, format: fmt) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
 //                    let inputCallback: AVAudioConverterInputBlock = { inNumPackets, outStatus in
 //                        outStatus.pointee = .haveData
@@ -577,7 +579,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
                     let values = self.audioBufferToBytes(buffer)
                     self.sendMicData(values)
                 }
-            }
+//            }
         //    if ( inErrorTest ){
         //        throw SpeechToTextError.runtimeError("for testing only")
         //    }
@@ -601,26 +603,45 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
     }
     
     private func sendMicData(_ data: [UInt8]) {
-        print("send mic data")
         let channelData = FlutterStandardTypedData(bytes: NSData(bytes: data, length: data.count) as Data)
         invokeFlutter(.recordData, arguments: channelData)
     }
     
     private func audioBufferToBytes(_ audioBuffer: AVAudioPCMBuffer) -> [UInt8] {
-        let srcLeft = audioBuffer.int16ChannelData![0]
-        let bytesPerFrame = audioBuffer.format.streamDescription.pointee.mBytesPerFrame
-        let numBytes = Int(bytesPerFrame * audioBuffer.frameLength)
-        
-        // initialize bytes by 0
-        var audioByteArray = [UInt8](repeating: 0, count: numBytes)
-        
-        srcLeft.withMemoryRebound(to: UInt8.self, capacity: numBytes) { srcByteData in
-            audioByteArray.withUnsafeMutableBufferPointer {
-                $0.baseAddress!.initialize(from: srcByteData, count: numBytes)
+        if audioBuffer.int16ChannelData != nil {
+            let srcLeft = audioBuffer.int16ChannelData![0]
+            let bytesPerFrame = audioBuffer.format.streamDescription.pointee.mBytesPerFrame
+            let numBytes = Int(bytesPerFrame * audioBuffer.frameLength)
+            
+            // initialize bytes by 0
+            var audioByteArray = [UInt8](repeating: 0, count: numBytes)
+            
+            srcLeft.withMemoryRebound(to: UInt8.self, capacity: numBytes) { srcByteData in
+                audioByteArray.withUnsafeMutableBufferPointer {
+                    $0.baseAddress?.initialize(from: srcByteData, count: numBytes)
+                }
             }
+            
+            return audioByteArray
+        }
+        if audioBuffer.int32ChannelData != nil {
+            let srcLeft = audioBuffer.int32ChannelData![0]
+            let bytesPerFrame = audioBuffer.format.streamDescription.pointee.mBytesPerFrame
+            let numBytes = Int(bytesPerFrame * audioBuffer.frameLength)
+            
+            // initialize bytes by 0
+            var audioByteArray = [UInt8](repeating: 0, count: numBytes)
+            
+            srcLeft.withMemoryRebound(to: UInt8.self, capacity: numBytes) { srcByteData in
+                audioByteArray.withUnsafeMutableBufferPointer {
+                    $0.baseAddress?.initialize(from: srcByteData, count: numBytes)
+                }
+            }
+            
+            return audioByteArray
         }
         
-        return audioByteArray
+        return []
     }
     
     /// Build a list of localId:name with the current locale first

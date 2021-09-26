@@ -290,6 +290,7 @@ class SpeechToText {
     SpeechToTextPlatform.instance.onError = _onNotifyError;
     SpeechToTextPlatform.instance.onStatus = _onNotifyStatus;
     SpeechToTextPlatform.instance.onSoundLevel = _onSoundLevelChange;
+    SpeechToTextPlatform.instance.onRecordData = _onRecordData;
     _initWorked = await SpeechToTextPlatform.instance
         .initialize(debugLogging: debugLogging, options: options);
     return _initWorked;
@@ -664,6 +665,12 @@ class SpeechToText {
     _lastSoundLevel = level;
     if (null != _soundLevelChange) {
       _soundLevelChange!(level);
+    }
+  }
+
+  void _onRecordData(Uint8List data) {
+    if (_recordData != null) {
+      _recordData!(data);
     }
   }
 

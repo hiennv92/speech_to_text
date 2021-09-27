@@ -493,7 +493,6 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             let recordingFormat = inputNode?.outputFormat(forBus: self.busForNodeTap)
             let theSampleRate = audioSession.sampleRate
             let fmt = AVAudioFormat(commonFormat: recordingFormat!.commonFormat, sampleRate: theSampleRate, channels: recordingFormat!.channelCount, interleaved: recordingFormat!.isInterleaved)
-            print("speech input sample \(theSampleRate) \(recordingFormat!.sampleRate)")
             try trap {
                 self.inputNode?.installTap(onBus: self.busForNodeTap, bufferSize: self.speechBufferSize, format: fmt) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
                     currentRequest.append(buffer)
@@ -566,20 +565,16 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             }
             
             let recordingFormat = inputNode?.outputFormat(forBus: self.busForNodeTap)
-            let theSampleRate = audioSession.sampleRate
-            let fmt = AVAudioFormat(commonFormat: recordingFormat!.commonFormat, sampleRate: theSampleRate, channels: recordingFormat!.channelCount, interleaved: recordingFormat!.isInterleaved)
-            print("speech input sample \(theSampleRate) \(recordingFormat!.sampleRate)")
-//            try trap {
+            let theSampleRate: Double = self.audioSession.sampleRate
+            let fmt = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: theSampleRate, channels: recordingFormat!.channelCount, interleaved: recordingFormat!.isInterleaved)
+            try trap {
+                let outputFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: recordingFormat!.channelCount, interleaved: recordingFormat!.isInterleaved)
                 self.inputNode?.installTap(onBus: self.busForNodeTap, bufferSize: self.speechBufferSize, format: fmt) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
-//                    let inputCallback: AVAudioConverterInputBlock = { inNumPackets, outStatus in
-//                        outStatus.pointee = .haveData
-//                        return buffer
-//                    }
-                
-                    let values = self.audioBufferToBytes(buffer)
+                    let values = self.audioBufferToBytes(self.convertBufferFormat(buffer, from: fmt!, to: outputFormat!))
                     self.sendMicData(values)
+                    
                 }
-//            }
+            }
         //    if ( inErrorTest ){
         //        throw SpeechToTextError.runtimeError("for testing only")
         //    }
@@ -641,7 +636,40 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             return audioByteArray
         }
         
+        if audioBuffer.floatChannelData != nil {
+            let srcLeft = audioBuffer.floatChannelData![0]
+            let bytesPerFrame = audioBuffer.format.streamDescription.pointee.mBytesPerFrame
+            let numBytes = Int(bytesPerFrame * audioBuffer.frameLength)
+            
+            // initialize bytes by 0
+            var audioByteArray = [UInt8](repeating: 0, count: numBytes)
+            
+            srcLeft.withMemoryRebound(to: UInt8.self, capacity: numBytes) { srcByteData in
+                audioByteArray.withUnsafeMutableBufferPointer {
+                    $0.baseAddress!.initialize(from: srcByteData, count: numBytes)
+                }
+            }
+            
+            return audioByteArray
+        }
+        
         return []
+    }
+    
+    private func convertBufferFormat(_ buffer: AVAudioPCMBuffer, from: AVAudioFormat, to: AVAudioFormat) -> AVAudioPCMBuffer {
+        
+        let formatConverter =  AVAudioConverter(from: from, to: to)
+        let ratio: Float = Float(from.sampleRate)/Float(to.sampleRate)
+        let pcmBuffer = AVAudioPCMBuffer(pcmFormat: to, frameCapacity: UInt32(Float(buffer.frameCapacity) / ratio))!
+        
+        var error: NSError? = nil
+        let inputBlock: AVAudioConverterInputBlock = {inNumPackets, outStatus in
+            outStatus.pointee = .haveData
+            return buffer
+        }
+        formatConverter?.convert(to: pcmBuffer, error: &error, withInputFrom: inputBlock)
+        
+        return pcmBuffer
     }
     
     /// Build a list of localId:name with the current locale first

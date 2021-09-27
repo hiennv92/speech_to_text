@@ -415,6 +415,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             os_log("Error deactivation: %{PUBLIC}@", log: pluginLog, type: .info, error.localizedDescription)
         }
 
+       
         if let result = result {
             sendBoolResult( true, result );
         }
@@ -559,6 +560,16 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             }
             try self.audioSession.setMode(AVAudioSession.Mode.default)
             try self.audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+//            if let sound = listeningSound {
+//                self.onPlayEnd = {()->Void in
+//                    if ( !self.failedListen ) {
+//                        self.listening = true
+//                        self.invokeFlutter( SwiftSpeechToTextCallbackMethods.notifyStatus, arguments: SpeechToTextStatus.listening.rawValue )
+//
+//                    }
+//                }
+//                sound.play()
+//            }
             self.audioEngine.reset();
             if(inputNode?.inputFormat(forBus: 0).channelCount == 0){
                 throw SpeechToTextError.runtimeError("Not enough available inputs.")

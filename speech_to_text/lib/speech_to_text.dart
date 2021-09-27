@@ -463,9 +463,7 @@ class SpeechToText {
     _lastSpeechResult = null;
     _recognized = false;
     try {
-      var started = await SpeechToTextPlatform.instance
-          .recordSound(sampleRate: sampleRate);
-      print('call recordSound success');
+      await SpeechToTextPlatform.instance.recordSound(sampleRate: sampleRate);
     } on PlatformException catch (e) {
       throw ListenFailedException(e.details);
     }
@@ -473,6 +471,10 @@ class SpeechToText {
 
   Future<void> stopRecord() async {
     await SpeechToTextPlatform.instance.stopRecord();
+  }
+
+  Future<void> cancelRecord() async {
+    await SpeechToTextPlatform.instance.cancelRecord();
   }
 
   void _setupListenAndPause(

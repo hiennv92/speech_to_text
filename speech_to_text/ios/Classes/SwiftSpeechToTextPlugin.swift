@@ -15,6 +15,7 @@ public enum SwiftSpeechToTextMethods: String {
     case has_speech_permission
     case record_sound
     case stop_record
+    case cancel_record
     case unknown // just for testing
 }
 
@@ -162,6 +163,8 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             recordSound(result, sampleRate: sampleRate)
         case SwiftSpeechToTextMethods.stop_record.rawValue:
             stopCurrentRecord(result: result)
+        case SwiftSpeechToTextMethods.cancel_record.rawValue:
+            cancelCurrentRecord(result: result)
         default:
             os_log("Unrecognized method: %{PUBLIC}@", log: pluginLog, type: .error, call.method)
             DispatchQueue.main.async {
@@ -380,10 +383,46 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         onPlayEnd = nil
         listening = false
     }
-
-    private func stopCurrentRecord( result: FlutterResult? = nil ) {
+    
+    private func cancelCurrentRecord(result: @escaping FlutterResult) {
         stopAllPlayers()
+        
+        if let sound = cancelSound {
+            print("stopRecord cancel play")
+            onPlayEnd = { () -> Void in
+                self.stopCurrentRecordSession()
+                self.sendBoolResult( true, result )
+                return
+            }
+            sound.play()
+        } else {
+            print("stopRecord cancel no play")
+            self.stopCurrentRecordSession()
+            self.sendBoolResult( true, result )
+        }
+    }
 
+    private func stopCurrentRecord( result: @escaping FlutterResult ) {
+        stopAllPlayers()
+        
+        if let sound = successSound {
+            print("stopRecord stop play")
+            onPlayEnd = {() -> Void in
+                self.stopCurrentRecordSession()
+                self.sendBoolResult( true, result )
+                return
+            }
+            sound.play()
+        } else {
+            print("stopRecord stop no play")
+            self.stopCurrentRecordSession()
+            sendBoolResult( true, result );
+        }
+    }
+    
+    private func stopCurrentRecordSession() {
+        stopAllPlayers()
+        
         do {
             try trap {
                 self.audioEngine.stop()
@@ -414,11 +453,10 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         catch {
             os_log("Error deactivation: %{PUBLIC}@", log: pluginLog, type: .info, error.localizedDescription)
         }
-
-       
-        if let result = result {
-            sendBoolResult( true, result );
-        }
+        currentRequest = nil
+        currentTask = nil
+        onPlayEnd = nil
+        listening = false
     }
     
     private func listenForSpeech( _ result: @escaping FlutterResult, localeStr: String?, partialResults: Bool, onDevice: Bool, listenMode: ListenMode, sampleRate: Int ) {
@@ -552,6 +590,9 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             return
         }
         do {
+            if (self.audioSession.isOtherAudioPlaying) {
+                try self.audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+            }
             rememberedAudioCategory = self.audioSession.category
             try self.audioSession.setCategory(AVAudioSession.Category.playAndRecord, options: .defaultToSpeaker)
             //            try self.audioSession.setMode(AVAudioSession.Mode.measurement)
@@ -560,16 +601,9 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
             }
             try self.audioSession.setMode(AVAudioSession.Mode.default)
             try self.audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-//            if let sound = listeningSound {
-//                self.onPlayEnd = {()->Void in
-//                    if ( !self.failedListen ) {
-//                        self.listening = true
-//                        self.invokeFlutter( SwiftSpeechToTextCallbackMethods.notifyStatus, arguments: SpeechToTextStatus.listening.rawValue )
-//
-//                    }
-//                }
-//                sound.play()
-//            }
+            if let sound = listeningSound {
+                sound.play()
+            }
             self.audioEngine.reset();
             if(inputNode?.inputFormat(forBus: 0).channelCount == 0){
                 throw SpeechToTextError.runtimeError("Not enough available inputs.")
@@ -596,7 +630,7 @@ public class SwiftSpeechToTextPlugin: NSObject, FlutterPlugin {
         catch {
             failedListen = true
             os_log("Error starting listen: %{PUBLIC}@", log: pluginLog, type: .error, error.localizedDescription)
-            stopCurrentRecord()
+            stopCurrentRecordSession()
             sendBoolResult( false, result );
             let speechError = SpeechRecognitionError(errorMsg: "error_listen_failed", permanent: true )
             do {

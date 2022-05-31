@@ -672,9 +672,13 @@ public class SpeechToTextPlugin :
 
         handler.postDelayed( {
                 run {
-                    debugLog("Recognizer destroy")
-                    speechRecognizer?.destroy();
-                    speechRecognizer = null;
+                    try {
+                        debugLog("Recognizer destroy")
+                        speechRecognizer?.destroy();
+                        speechRecognizer = null;
+                    } catch (e: java.lang.Exception) {
+                        debugLog("Cannot destroy recognizer")
+                    }
                 }
         }, 50 )
     }

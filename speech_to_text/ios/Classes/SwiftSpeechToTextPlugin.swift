@@ -846,7 +846,9 @@ extension SwiftSpeechToTextPlugin : SFSpeechRecognitionTaskDelegate {
                 }
             }
         }
-        stopCurrentListen( )
+        if onPlayEnd == nil {
+            stopCurrentListen( )
+        }
     }
     
     public func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didHypothesizeTranscription transcription: SFTranscription) {

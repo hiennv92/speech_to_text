@@ -43,16 +43,6 @@ class MethodChannelSpeechToText extends SpeechToTextPlatform {
   }
 
   @override
-  Future<bool> hasRecordPermission() async {
-    return await _channel.invokeMethod<bool>('has_record_permission') ?? false;
-  }
-
-  @override
-  Future<bool> hasSpeechPermission() async {
-    return await _channel.invokeMethod<bool>('has_speech_permission') ?? false;
-  }
-
-  @override
   Future<bool> initialize(
       {debugLogging = false, List<SpeechConfigOption>? options}) async {
     _channel.setMethodCallHandler(_handleCallbacks);

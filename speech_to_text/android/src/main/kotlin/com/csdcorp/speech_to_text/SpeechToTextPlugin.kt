@@ -246,6 +246,8 @@ public class SpeechToTextPlugin :
                     Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
             Log.v(logTag, "hasRecordPermission ${hasPerm}")
             result.success(hasPerm)
+        } else {
+            result.success(false)
         }
     }
 
@@ -255,9 +257,14 @@ public class SpeechToTextPlugin :
             Log.v(logTag, "sdk version too low")
             return
         }
-        val permission = SpeechRecognizer.isRecognitionAvailable(pluginContext)
-        Log.v(logTag, "hasSpeechPermission ${permission}")
-        result.success(permission)
+
+        if (pluginContext != null) {
+            val permission = SpeechRecognizer.isRecognitionAvailable(pluginContext!!)
+            Log.v(logTag, "hasSpeechPermission ${permission}")
+            result.success(permission)
+        } else {
+            result.success(false)
+        }
     }
 
     private fun hasPermission(result: Result) {
@@ -271,6 +278,8 @@ public class SpeechToTextPlugin :
             val hasPerm = ContextCompat.checkSelfPermission(localContext,
                     Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
             result.success(hasPerm)
+        } else {
+            result.success(false)
         }
     }
 
@@ -295,7 +304,11 @@ public class SpeechToTextPlugin :
             result.success(false)
             return
         }
-        result.success(SpeechRecognizer.isRecognitionAvailable(pluginContext));
+        if (pluginContext != null) {
+            result.success(SpeechRecognizer.isRecognitionAvailable(pluginContext!!));
+        } else {
+            result.success(false)
+        }
     }
 
     private fun sdkVersionTooLow(): Boolean {
